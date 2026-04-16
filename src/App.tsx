@@ -97,13 +97,45 @@ const T = {
   white: "#ffffff", dark: "#111827", bg: "#f8fafc",
   gray50: "#f9fafb", gray100: "#f3f4f6", gray200: "#e5e7eb",
   gray400: "#9ca3af", gray500: "#6b7280", gray700: "#374151",
-  blue: "#1d4ed8", blueBg: "#eef2ff", blueBg2: "#e0e7ff", blueBorder: "#c7d2fe",
-  // CRITICAL — color/risk/low + red tokens
-  critText: "#e2483d", critBg: "#fef2f2", critBorder: "#fecaca", critSel: "#fff1f2",
+
+  // Blue — primary + logo (blue/700)
+  blue:       "#1d4ed8",
+  blueBg:     "#eef2ff",   // indigo/50
+  blueBorder: "#c7d2fe",   // indigo/200
+
+  // CRITICAL — red tokens
+  critText:   "#e2483d",
+  critBg:     "#fef2f2",   // red/50
+  critBorder: "#fecaca",   // red/200
+  critSel:    "#fff1f2",
+
   // HIGH — orange tokens
-  highText: "#c2410c", highBg: "#fff7ed", highBorder: "#fed7aa", highSel: "#fff7ed",
-  // MEDIUM — color/risk/medium + amber tokens
-  medText: "#b45309", medBg: "#fffbeb", medBorder: "#fde68a", medSel: "#fefce8",
+  highText:   "#c2410c",
+  highBg:     "#fff7ed",   // orange/50
+  highBorder: "#fed7aa",   // orange/200
+  highSel:    "#fff7ed",
+
+  // MEDIUM — amber tokens
+  medText:    "#b45309",   // amber/700
+  medBg:      "#fffbeb",   // amber/50
+  medBorder:  "#fde68a",   // amber/200
+  medSel:     "#fefce8",
+
+  // CUSTOMER SERVICE badge — blue/indigo
+  csBg:     "#eef2ff",   // indigo/50
+  csBorder: "#c7d2fe",   // indigo/200
+  csText:   "#1d4ed8",   // blue/700
+
+  // HEALTHCARE badge — muted green (not bright)
+  // Using desaturated green: light bg, subtle border, readable text
+  hcBg:     "#f0fdf4",   // green/50 — very light, not bright
+  hcBorder: "#bbf7d0",   // green/200 — soft border
+  hcText:   "#15803d",   // green/700 — readable, not loud
+
+  // Low confidence — amber/600 (warning, distinct from severity)
+  lowConfColor:  "#d97706",  // amber/600
+  highConfColor: "#16a34a",  // green/600
+
   green: "#16a34a",
 };
 
@@ -113,14 +145,15 @@ const SEV: Record<string, { badge_bg: string; badge_bd: string; badge_tx: string
   MEDIUM:   { badge_bg: T.medBg,   badge_bd: T.medBorder,  badge_tx: T.medText,  sel_bg: T.medSel,  rc_bg: T.medBg,   rc_bd: T.medBorder,  rc_left: T.medText  },
 };
 
+// Product tag — muted green for HEALTHCARE, blue for CUSTOMER SERVICE
 function ProductTag({ product }: { product: string }) {
   const isCS = product === "CUSTOMER SERVICE";
   return (
     <span style={{
       fontSize: 8, fontWeight: 600, letterSpacing: "0.03em",
-      background: isCS ? T.blueBg : T.gray100,
-      color: isCS ? T.blue : T.gray500,
-      border: `1px solid ${isCS ? T.blueBorder : T.gray200}`,
+      background: isCS ? T.csBg   : T.hcBg,
+      color:      isCS ? T.csText : T.hcText,
+      border:     `1px solid ${isCS ? T.csBorder : T.hcBorder}`,
       borderRadius: 4, padding: "2px 6px",
       whiteSpace: "nowrap" as const, display: "inline-block", lineHeight: "16px",
     }}>
@@ -144,7 +177,6 @@ function SevBadge({ sev }: { sev: string }) {
   );
 }
 
-// Section title — reusable, always left aligned
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <p style={{ fontSize: 10, fontWeight: 700, color: T.gray500, textTransform: "uppercase" as const, letterSpacing: "0.06em", margin: "0 0 10px", textAlign: "left" as const }}>
@@ -205,26 +237,16 @@ export default function App() {
     }]), 700);
   };
 
-  // Root cause card colors — match selected severity
   const sevCfg = sel ? (SEV[sel.severity] || SEV.MEDIUM) : SEV.CRITICAL;
 
   return (
-    <div style={{
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-      height: "100vh", width: "100vw",
-      display: "flex", flexDirection: "column",
-      background: T.bg, overflow: "hidden", boxSizing: "border-box",
-    }}>
+    <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", height: "100vh", width: "100vw", display: "flex", flexDirection: "column", background: T.bg, overflow: "hidden", boxSizing: "border-box" }}>
 
-      {/* ── Full-width header ── */}
-      <div style={{
-        width: "100%", height: 52, flexShrink: 0,
-        background: T.white, borderBottom: `1px solid ${T.gray200}`,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 20px", zIndex: 100, boxSizing: "border-box",
-      }}>
+      {/* ── Header ── */}
+      <div style={{ width: "100%", height: 52, flexShrink: 0, background: T.white, borderBottom: `1px solid ${T.gray200}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", zIndex: 100, boxSizing: "border-box" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 28, height: 28, background: T.dark, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          {/* Logo — blue */}
+          <div style={{ width: 28, height: 28, background: T.blue, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <span style={{ color: T.white, fontSize: 14 }}>⬡</span>
           </div>
           <span style={{ fontSize: 14, fontWeight: 700, color: T.dark }}>Trace Intel</span>
@@ -253,7 +275,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ── Sidebar — 280px ── */}
+        {/* ── Sidebar ── */}
         {(!isMobile || mobileView === "list") && (
           <div style={{ width: isMobile ? "100%" : 280, flexShrink: 0, background: T.white, borderRight: `1px solid ${T.gray200}`, display: "flex", flexDirection: "column", overflowY: "auto" }}>
 
@@ -269,7 +291,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Section title — left aligned */}
+            {/* Section title */}
             <div style={{ padding: "10px 16px 4px", textAlign: "left" as const }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: T.gray500, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
                 Failed Evaluations
@@ -279,47 +301,44 @@ export default function App() {
             {loading && <p style={{ padding: "12px 16px", fontSize: 12, color: T.gray500 }}>Loading...</p>}
             {err     && <p style={{ padding: "12px 16px", fontSize: 12, color: T.critText }}>Error: {err}</p>}
 
-            {/* Trace rows — everything left aligned */}
+            {/* Trace rows */}
             {traces.map(tr => {
               const isSel  = sel?.id === tr.id;
               const sc     = SEV[tr.severity] || SEV.MEDIUM;
               const pct    = Math.round(tr.confidenceScore * 100);
-              const confTxt = tr.confidenceScore >= 0.7 ? `High conf. · ${pct}%` : `Low conf. · ${pct}%`;
+              const isLowConf = tr.confidenceScore < 0.7;
+              const confTxt = isLowConf ? `Low conf. · ${pct}%` : `High conf. · ${pct}%`;
+              const confColor = isLowConf ? T.lowConfColor : T.highConfColor;
 
               return (
                 <div key={tr.id}
                   onClick={() => { setSel(tr); setEvOpen(true); setMsgs([]); setMobileView("detail"); }}
-                  style={{
-                    padding: "10px 16px",
-                    background: isSel ? sc.sel_bg : T.white,
-                    cursor: "pointer",
-                    borderBottom: `1px solid ${T.gray100}`,
-                    textAlign: "left" as const,         // ← force all children left
-                  }}>
+                  style={{ padding: "10px 16px", background: isSel ? sc.sel_bg : T.white, cursor: "pointer", borderBottom: `1px solid ${T.gray100}`, textAlign: "left" as const }}>
 
-                  {/* Line 1: trace name (bold) + severity badge — same row */}
+                  {/* Line 1: name + severity badge */}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, marginBottom: 5 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: T.dark, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const, flex: 1, textAlign: "left" as const }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.dark, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const, flex: 1 }}>
                       {tr.name}
                     </span>
                     <SevBadge sev={tr.severity} />
                   </div>
 
-                  {/* Line 2: product tag + confidence — left aligned */}
+                  {/* Line 2: product tag + confidence */}
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, justifyContent: "flex-start" }}>
                     <ProductTag product={tr.product} />
-                    <span style={{ fontSize: 10, color: T.gray500, whiteSpace: "nowrap" as const }}>
+                    {/* Low confidence — amber/600, no bg, no border */}
+                    <span style={{ fontSize: 10, color: confColor, whiteSpace: "nowrap" as const, fontWeight: 500 }}>
                       {confTxt}
                     </span>
                   </div>
 
-                  {/* Line 3: failure type — bigger, explicitly left aligned */}
+                  {/* Line 3: failure type */}
                   <p style={{ fontSize: 12, fontWeight: 500, color: T.gray700, margin: "0 0 5px", textAlign: "left" as const }}>
                     {tr.failureType}
                   </p>
 
-                  {/* Line 4: status — plain ALL CAPS, left aligned */}
-                  <span style={{ fontSize: 9, fontWeight: 600, color: T.gray400, textTransform: "uppercase" as const, letterSpacing: "0.05em", display: "block", textAlign: "left" as const }}>
+                  {/* Line 4: status plain ALL CAPS */}
+                  <span style={{ fontSize: 9, fontWeight: 600, color: T.gray400, textTransform: "uppercase" as const, letterSpacing: "0.05em", display: "block" }}>
                     {tr.traceStatus}
                   </span>
                 </div>
@@ -334,17 +353,15 @@ export default function App() {
 
             {/* Title bar */}
             <div style={{ background: T.white, borderBottom: `1px solid ${T.gray200}`, padding: "12px 24px", flexShrink: 0 }}>
-              {/* Breadcrumb — left aligned */}
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, justifyContent: "flex-start" }}>
                 <ProductTag product={sel.product} />
                 <span style={{ fontSize: 10, color: T.gray500 }}>→  {sel.name}</span>
               </div>
-              {/* Title row — swapped CTAs: Quarantine first, Rerun second */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" as const }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" as const, justifyContent: "flex-start" }}>
-                  <span style={{ fontSize: 20, fontWeight: 700, color: T.dark, textAlign: "left" as const }}>{sel.failureType}</span>
+                  <span style={{ fontSize: 20, fontWeight: 700, color: T.dark }}>{sel.failureType}</span>
                   <SevBadge sev={sel.severity} />
-                  <span style={{ fontSize: 11, color: T.gray500 }}>
+                  <span style={{ fontSize: 11, color: sel.confidenceScore < 0.7 ? T.lowConfColor : T.highConfColor, fontWeight: 500 }}>
                     {sel.confidenceScore >= 0.7 ? "High" : "Low"} conf. · {Math.round(sel.confidenceScore * 100)}%
                   </span>
                   <span style={{ fontSize: 10, fontWeight: 600, color: T.gray400, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
@@ -355,7 +372,7 @@ export default function App() {
                   {isMobile && (
                     <button onClick={() => setMobileView("list")} style={{ padding: "7px 12px", background: T.gray100, border: `1px solid ${T.gray200}`, borderRadius: 8, fontSize: 11, cursor: "pointer", color: T.gray700 }}>← Back</button>
                   )}
-                  {/* Swapped: Quarantine first */}
+                  {/* Quarantine first */}
                   <button style={{ padding: "8px 14px", background: T.white, border: `1px solid ${T.gray200}`, borderRadius: 8, fontSize: 11, color: T.gray700, cursor: "pointer" }}>
                     ⚠ Quarantine
                   </button>
@@ -370,30 +387,24 @@ export default function App() {
             {/* Main + Right */}
             <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
-              {/* ── Main panel — white, flex:1 ── */}
+              {/* ── Main panel ── */}
               <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px", minWidth: 0, background: T.white }}>
-
-                {/* Subtitle — left aligned */}
                 <p style={{ fontSize: 10, color: T.gray500, margin: "0 0 20px", textAlign: "left" as const }}>
                   Investigated by Jason · {new Date(sel.timestamp).toLocaleString()} · Trace ID: {sel.id.slice(0, 16)}...
                 </p>
 
-                {/* Timeline — all left aligned */}
+                {/* Timeline */}
                 <div style={{ border: `1px solid ${T.gray200}`, borderRadius: 12, padding: "16px 20px", marginBottom: 16 }}>
-                  {/* Title left aligned */}
                   <p style={{ fontSize: 10, fontWeight: 700, color: T.gray700, textTransform: "uppercase" as const, letterSpacing: "0.06em", margin: "0 0 16px", textAlign: "left" as const }}>
                     Trace Timeline
                   </p>
                   {sel.spans.map((sp, i) => (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
                       <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: sp.status === "error" ? T.critText : sp.status === "warning" ? "#d97706" : T.green }} />
-                      {/* Span name — left aligned */}
                       <span style={{ fontSize: 11, flex: 1, fontWeight: sp.status === "error" ? 700 : 400, color: sp.status === "error" ? T.dark : T.gray500, textAlign: "left" as const }}>
                         {sp.name}
                       </span>
-                      <span style={{ fontSize: 9, color: T.gray500, background: T.gray100, padding: "2px 6px", borderRadius: 4, flexShrink: 0 }}>
-                        {sp.latency}ms
-                      </span>
+                      <span style={{ fontSize: 9, color: T.gray500, background: T.gray100, padding: "2px 6px", borderRadius: 4, flexShrink: 0 }}>{sp.latency}ms</span>
                       <span style={{ fontSize: 9, fontWeight: 700, minWidth: 52, textAlign: "right" as const, color: sp.status === "error" ? T.critText : sp.status === "warning" ? "#d97706" : T.green }}>
                         {sp.status === "error" ? "FAILED" : sp.status === "warning" ? "WARNING" : "OK"}
                       </span>
@@ -401,35 +412,21 @@ export default function App() {
                   ))}
                 </div>
 
-                {/* Root cause — bg matches severity of selected trace */}
-                <div style={{
-                  background: sevCfg.rc_bg,
-                  border: `1px solid ${sevCfg.rc_bd}`,
-                  borderLeft: `4px solid ${sevCfg.rc_left}`,
-                  borderRadius: 12, padding: "16px 20px", marginBottom: 16,
-                }}>
-                  {/* Label — left aligned */}
+                {/* Root cause — color matches severity */}
+                <div style={{ background: sevCfg.rc_bg, border: `1px solid ${sevCfg.rc_bd}`, borderLeft: `4px solid ${sevCfg.rc_left}`, borderRadius: 12, padding: "16px 20px", marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, justifyContent: "flex-start" }}>
                     <span style={{ fontSize: 11, color: sevCfg.rc_left }}>⚠</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: T.gray500, textTransform: "uppercase" as const, letterSpacing: "0.06em", textAlign: "left" as const }}>
-                      Root Cause Detected
-                    </span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: T.gray500, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Root Cause Detected</span>
                   </div>
-                  {/* Title — left aligned */}
-                  <p style={{ fontSize: 15, fontWeight: 700, color: T.dark, margin: "0 0 10px", textAlign: "left" as const }}>
-                    {sel.failureType}
-                  </p>
-                  {/* Paragraph — left aligned */}
-                  <p style={{ fontSize: 12, color: T.gray700, lineHeight: 1.7, margin: 0, textAlign: "left" as const }}>
-                    {sel.explanation}
-                  </p>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: T.dark, margin: "0 0 10px", textAlign: "left" as const }}>{sel.failureType}</p>
+                  <p style={{ fontSize: 12, color: T.gray700, lineHeight: 1.7, margin: 0, textAlign: "left" as const }}>{sel.explanation}</p>
                 </div>
 
                 {/* Evidence */}
                 <div style={{ border: `1px solid ${T.gray200}`, borderRadius: 12, overflow: "hidden" }}>
                   <button onClick={() => setEvOpen(!evOpen)} style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", background: T.gray50, border: "none", borderBottom: evOpen ? `1px solid ${T.gray200}` : "none", cursor: "pointer" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: T.gray700, textTransform: "uppercase" as const, letterSpacing: "0.06em", textAlign: "left" as const }}>Evidence</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: T.gray700, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Evidence</span>
                       <span style={{ fontSize: 9, fontWeight: 700, background: T.gray200, color: T.gray500, borderRadius: 10, padding: "1px 6px" }}>{sel.evidence.length}</span>
                     </div>
                     <span style={{ fontSize: 9, color: T.gray500 }}>{evOpen ? "▲ Hide" : "▼ Show"}</span>
@@ -451,12 +448,20 @@ export default function App() {
               {!isMobile && !isTablet && (
                 <div style={{ width: 280, flexShrink: 0, background: T.gray50, borderLeft: `1px solid ${T.gray200}`, overflowY: "auto", padding: "16px 14px" }}>
 
-                  {/* Suggested actions — left aligned */}
+                  {/* Suggested actions — ALL buttons same plain style, no dark/black */}
                   <SectionTitle>Suggested Actions</SectionTitle>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
                     {sel.suggestedActions.map((a, i) => (
                       <button key={i}
-                        style={{ width: "100%", padding: i === 0 ? "10px 14px" : "8px 14px", background: i === 0 ? T.dark : T.white, color: i === 0 ? T.white : T.gray700, border: `1px solid ${i === 0 ? T.dark : T.gray200}`, borderRadius: 8, fontSize: 11, fontWeight: i === 0 ? 700 : 400, cursor: "pointer", textAlign: "left" as const }}>
+                        style={{
+                          width: "100%", padding: "8px 14px",
+                          // All buttons identical — white bg, gray border, gray text
+                          background: T.white,
+                          color: T.gray700,
+                          border: `1px solid ${T.gray200}`,
+                          borderRadius: 8, fontSize: 11, fontWeight: 400,
+                          cursor: "pointer", textAlign: "left" as const,
+                        }}>
                         {a}
                       </button>
                     ))}
@@ -464,20 +469,18 @@ export default function App() {
 
                   <div style={{ height: 1, background: T.gray200, marginBottom: 14 }} />
 
-                  {/* Why these actions — left aligned */}
+                  {/* Why these actions */}
                   <div style={{ background: "#fffbeb", border: `1px solid #fde68a`, borderRadius: 10, padding: "12px 14px", marginBottom: 14 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
                       <span>💡</span>
                       <span style={{ fontSize: 11, fontWeight: 700, color: T.dark }}>Why these actions?</span>
                     </div>
-                    <p style={{ fontSize: 10, color: T.gray700, lineHeight: 1.6, margin: 0, textAlign: "left" as const }}>
-                      {sel.whyActions}
-                    </p>
+                    <p style={{ fontSize: 10, color: T.gray700, lineHeight: 1.6, margin: 0, textAlign: "left" as const }}>{sel.whyActions}</p>
                   </div>
 
                   <div style={{ height: 1, background: T.gray200, marginBottom: 14 }} />
 
-                  {/* Estimated impact — left aligned */}
+                  {/* Estimated impact */}
                   <SectionTitle>Estimated Impact</SectionTitle>
                   {[
                     { l: "Resolution time", v: sel.impact.time,  g: false },
@@ -485,7 +488,7 @@ export default function App() {
                     { l: "Confidence boost",v: sel.impact.boost, g: true  },
                   ].map(item => (
                     <div key={item.l} style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                      <span style={{ fontSize: 11, color: T.gray500, textAlign: "left" as const }}>{item.l}</span>
+                      <span style={{ fontSize: 11, color: T.gray500 }}>{item.l}</span>
                       <span style={{ fontSize: 11, fontWeight: 700, color: item.g ? T.green : T.dark }}>{item.v}</span>
                     </div>
                   ))}
