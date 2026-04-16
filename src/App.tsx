@@ -212,7 +212,7 @@ export default function App() {
           <div style={{ width: 52, flexShrink: 0, background: T.white, borderRight: `1px solid ${T.gray200}`, display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, overflowY: "auto" }}>
             {NAV_ITEMS.map(item => (
               <div key={item.label} style={{ width: 42, height: 52, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRadius: 8, marginBottom: 2, background: item.active ? T.blueBg : "transparent", cursor: "pointer" }}>
-                <span style={{ fontSize: 15, lineHeight: 1, marginBottom: 3 }}>{item.icon}</span>
+                <span style={{ fontSize: 15, lineHeight: 1, marginBottom: 2 }}>{item.icon}</span>
                 <span style={{ fontSize: 8, fontWeight: item.active ? 700 : 400, color: item.active ? T.blue : T.gray500 }}>{item.label}</span>
               </div>
             ))}
@@ -257,30 +257,25 @@ export default function App() {
               return (
                 <div key={tr.id}
                   onClick={() => { setSel(tr); setEvOpen(true); setMsgs([]); setMobileView("detail"); }}
-                  style={{ padding: "7px 16px", background: isSel ? sc.sel_bg : T.white, cursor: "pointer", borderBottom: `1px solid ${T.gray100}`, textAlign: "left" as const }}>
+                  style={{ padding: "7px 14px", background: isSel ? sc.sel_bg : T.white, cursor: "pointer", borderBottom: `1px solid ${T.gray100}`, textAlign: "left" as const }}>
 
-                  {/* Line 1: trace name + severity badge */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, marginBottom: 3 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: T.dark, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const, flex: 1 }}>
+                  {/* Line 1: name + severity */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, marginBottom: 2 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.dark, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const, flex: 1, lineHeight: "1.2" }}>
                       {tr.name}
                     </span>
                     <SevBadge sev={tr.severity} />
                   </div>
-
-                  {/* Line 2: confidence text only — no product tag */}
-                  <div style={{ marginBottom: 3 }}>
-                    <span style={{ fontSize: 10, color: confColor, fontWeight: 500 }}>
-                      {confTxt}
-                    </span>
-                  </div>
-
+                  {/* Line 2: confidence */}
+                  <span style={{ fontSize: 10, color: confColor, fontWeight: 500, lineHeight: "1.2", display: "block", marginBottom: 1 }}>
+                    {confTxt}
+                  </span>
                   {/* Line 3: failure type */}
-                  <p style={{ fontSize: 12, fontWeight: 500, color: T.gray700, margin: "0 0 3px", textAlign: "left" as const }}>
+                  <p style={{ fontSize: 11, fontWeight: 500, color: T.gray700, margin: "0 0 1px", lineHeight: "1.3" }}>
                     {tr.failureType}
                   </p>
-
-                  {/* Line 4: status plain ALL CAPS */}
-                  <span style={{ fontSize: 9, fontWeight: 600, color: T.gray400, textTransform: "uppercase" as const, letterSpacing: "0.05em", display: "block" }}>
+                  {/* Line 4: status */}
+                  <span style={{ fontSize: 9, fontWeight: 600, color: T.gray400, textTransform: "uppercase" as const, letterSpacing: "0.05em", lineHeight: "1.2", display: "block" }}>
                     {tr.traceStatus}
                   </span>
                 </div>
