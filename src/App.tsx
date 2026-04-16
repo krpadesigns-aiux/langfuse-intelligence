@@ -64,114 +64,139 @@ const SCENARIOS: Record<string, Partial<Trace>> = {
 
 async function fetchTraces(): Promise<Trace[]> {
   const creds = btoa("pk-lf-d05e60cb-f349-4d23-93b3-649bb0b9468e:sk-lf-7d64433c-6df0-4b56-b95e-2dd654b32c15");
-  const res = await fetch("https://us.cloud.langfuse.com/api/public/traces?limit=20", { headers:{ Authorization:"Basic "+creds } });
-  if (!res.ok) throw new Error("Langfuse "+res.status);
+  const res = await fetch("https://us.cloud.langfuse.com/api/public/traces?limit=20", {
+    headers: { Authorization: "Basic " + creds },
+  });
+  if (!res.ok) throw new Error("Langfuse " + res.status);
   const { data = [] } = await res.json();
   return data.map((t: any): Trace => {
-    const score = Math.min(t.scores?.length ? t.scores.reduce((s:number,x:any)=>s+x.value,0)/t.scores.length : Math.random()*0.5, 1);
+    const scores = t.scores || [];
+    const score = Math.min(
+      scores.length ? scores.reduce((s: number, x: any) => s + x.value, 0) / scores.length : Math.random() * 0.5,
+      1
+    );
     const s = SCENARIOS[t.name] || {};
     return {
-      id:t.id, name:t.name||"Unnamed", timestamp:t.timestamp,
-      failureType:s.failureType||"Evaluation failure",
-      explanation:s.explanation||`Score: ${(score*100).toFixed(0)}%. Flagged.`,
-      confidenceScore:score, severity:s.severity||"MEDIUM", traceStatus:s.traceStatus||"NEW",
-      evidence:s.evidence||["Below threshold","Flagged for review"],
-      suggestedActions:s.suggestedActions||["Review trace","Re-run evaluation","Send to call supervisor"],
-      spans:s.spans||[{name:"Processing",status:"success",latency:120},{name:"Evaluation",status:"error",latency:140}],
-      product:s.product||"GENERAL", impact:s.impact||{time:"~20 min",calls:"Unknown",boost:"+25%"},
-      whyActions:s.whyActions||"Based on failure pattern, these actions have the highest success rate.",
+      id: t.id, name: t.name || "Unnamed", timestamp: t.timestamp,
+      failureType: s.failureType || "Evaluation failure",
+      explanation: s.explanation || `Score: ${(score * 100).toFixed(0)}%. Flagged.`,
+      confidenceScore: score, severity: s.severity || "MEDIUM",
+      traceStatus: s.traceStatus || "NEW",
+      evidence: s.evidence || ["Below threshold", "Flagged for review"],
+      suggestedActions: s.suggestedActions || ["Review trace", "Re-run evaluation", "Send to call supervisor"],
+      spans: s.spans || [{ name: "Processing", status: "success", latency: 120 }, { name: "Evaluation", status: "error", latency: 140 }],
+      product: s.product || "GENERAL",
+      impact: s.impact || { time: "~20 min", calls: "Unknown", boost: "+25%" },
+      whyActions: s.whyActions || "Based on failure pattern, these actions have the highest success rate.",
     };
   });
 }
 
-// ── Tokens from Figma design system ──────────────────────────────
-const C = {
-  white:"#ffffff", dark:"#111827", bg:"#f8fafc",
-  gray50:"#f9fafb", gray100:"#f3f4f6", gray200:"#e5e7eb",
-  gray300:"#d1d5db", gray400:"#9ca3af", gray500:"#6b7280",
-  gray600:"#4b5563", gray700:"#374151",
-  blue:"#1d4ed8", blueBg:"#eff2fe", blueBorder:"#bfdbfe",
-  // Severity — Figma risk tokens
-  red:"#dc2626",    redBg:"#fef2f2",    redBorder:"#fecaca",
-  orange:"#ea580c", orBg:"#fff7ed",     orBorder:"#fed7aa",
-  amber:"#d97706",  ambBg:"#fffbeb",    ambBorder:"#fde68a",
-  green:"#16a34a",
+// ── Exact tokens from Figma design system ────────────────────────
+const T = {
+  white: "#ffffff",
+  dark:  "#111827",   // gray/900
+  bg:    "#f8fafc",
+
+  // Grays
+  gray50:  "#f9fafb",
+  gray100: "#f3f4f6",
+  gray200: "#e5e7eb",
+  gray400: "#9ca3af",
+  gray500: "#6b7280",
+  gray700: "#374151",
+
+  // Blue (indigo/700 from Figma — primary)
+  blue:       "#1d4ed8",
+  blueBg:     "#eef2ff",   // indigo/50
+  blueBg2:    "#e0e7ff",   // indigo/100
+  blueBorder: "#c7d2fe",   // indigo/200
+
+  // CRITICAL — color/risk/low = #e2483d (red)
+  critText:   "#e2483d",
+  critBg:     "#fef2f2",   // red/50  — badge bg
+  critBorder: "#fecaca",   // red/200 — badge border
+  critSel:    "#fff1f2",   // lighter than red/50 — selected row bg
+
+  // HIGH — orange
+  highText:   "#c2410c",   // orange/700 approx
+  highBg:     "#fff7ed",   // orange/50
+  highBorder: "#fed7aa",   // orange/200
+  highSel:    "#fff7ed",   // orange/50 — selected row bg
+
+  // MEDIUM — color/risk/medium = #f59e0b (amber)
+  medText:    "#b45309",   // amber/700
+  medBg:      "#fffbeb",   // amber/50
+  medBorder:  "#fde68a",   // amber/200
+  medSel:     "#fefce8",   // lighter amber — selected row bg
+
+  green: "#16a34a",        // green/600
 };
 
-const SEV = {
-  CRITICAL:{ bg:C.redBg,  bd:C.redBorder, tx:C.red    },
-  HIGH:    { bg:C.orBg,   bd:C.orBorder,  tx:C.orange },
-  MEDIUM:  { bg:C.ambBg,  bd:C.ambBorder, tx:C.amber  },
+// Severity config — using exact Figma tokens
+const SEV: Record<string, { badge_bg: string; badge_bd: string; badge_tx: string; sel_bg: string }> = {
+  CRITICAL: { badge_bg: T.critBg,  badge_bd: T.critBorder, badge_tx: T.critText, sel_bg: T.critSel  },
+  HIGH:     { badge_bg: T.highBg,  badge_bd: T.highBorder, badge_tx: T.highText, sel_bg: T.highSel  },
+  MEDIUM:   { badge_bg: T.medBg,   badge_bd: T.medBorder,  badge_tx: T.medText,  sel_bg: T.medSel   },
 };
 
-// Product tag — same style in both sidebar and main panel
+// Product tag — identical in sidebar and main panel
 function ProductTag({ product }: { product: string }) {
   const isCS = product === "CUSTOMER SERVICE";
   return (
     <span style={{
-      fontSize:8, fontWeight:600,
-      background: isCS ? C.blueBg : C.gray100,
-      color: isCS ? C.blue : C.gray600,
-      border: `1px solid ${isCS ? C.blueBorder : C.gray200}`,
-      borderRadius:4, padding:"2px 6px", whiteSpace:"nowrap" as const,
-      letterSpacing:"0.03em",
+      fontSize: 8, fontWeight: 600, letterSpacing: "0.03em",
+      background: isCS ? T.blueBg : T.gray100,
+      color:      isCS ? T.blue   : T.gray500,
+      border:     `1px solid ${isCS ? T.blueBorder : T.gray200}`,
+      borderRadius: 4, padding: "2px 6px",
+      whiteSpace: "nowrap" as const, display: "inline-block", lineHeight: "16px",
     }}>
       {product}
     </span>
   );
 }
 
+// Severity badge — exact Figma token colors, rounded
 function SevBadge({ sev }: { sev: string }) {
-  const s = SEV[sev as keyof typeof SEV] || SEV.MEDIUM;
+  const s = SEV[sev] || SEV.MEDIUM;
   return (
-    <span style={{ fontSize:9, fontWeight:700, background:s.bg, color:s.tx, border:`1px solid ${s.bd}`, borderRadius:4, padding:"2px 6px", whiteSpace:"nowrap" as const }}>
+    <span style={{
+      fontSize: 9, fontWeight: 700, letterSpacing: "0.04em",
+      background: s.badge_bg, color: s.badge_tx,
+      border: `1px solid ${s.badge_bd}`,
+      borderRadius: 8, padding: "2px 8px",
+      whiteSpace: "nowrap" as const,
+    }}>
       {sev}
     </span>
   );
 }
 
-// Confidence — no bg, no border, just text
-function ConfLabel({ label }: { label: string }) {
-  return (
-    <span style={{ fontSize:9, fontWeight:500, color:C.gray500, whiteSpace:"nowrap" as const }}>
-      {label}
-    </span>
-  );
-}
-
-// Status — neutral, compact
-function StatusBadge({ label }: { label: string }) {
-  return (
-    <span style={{ fontSize:8, fontWeight:500, background:C.gray100, color:C.gray600, border:`1px solid ${C.gray200}`, borderRadius:4, padding:"1px 5px", whiteSpace:"nowrap" as const }}>
-      {label}
-    </span>
-  );
-}
-
 const NAV_ITEMS = [
-  { icon:"📊", label:"Traces",   active:true  },
-  { icon:"✅", label:"Evals",    active:false },
-  { icon:"💬", label:"Prompts",  active:false },
-  { icon:"📈", label:"Analytics",active:false },
-  { icon:"⚙️", label:"Settings", active:false },
+  { icon: "📊", label: "Traces",    active: true  },
+  { icon: "✅", label: "Evals",     active: false },
+  { icon: "💬", label: "Prompts",   active: false },
+  { icon: "📈", label: "Analytics", active: false },
+  { icon: "⚙️", label: "Settings",  active: false },
 ];
 
 export default function App() {
-  const [traces, setTraces] = useState<Trace[]>([]);
-  const [sel, setSel]       = useState<Trace|null>(null);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr]         = useState<string|null>(null);
-  const [evOpen, setEvOpen]   = useState(true);
-  const [msgs, setMsgs]       = useState<{r:"u"|"a"; t:string}[]>([]);
-  const [chat, setChat]       = useState("");
-  const [mobileView, setMobileView] = useState<"list"|"detail">("list");
-  const [winW, setWinW]       = useState(typeof window!=="undefined" ? window.innerWidth : 1440);
+  const [traces, setTraces]         = useState<Trace[]>([]);
+  const [sel, setSel]               = useState<Trace | null>(null);
+  const [loading, setLoading]       = useState(true);
+  const [err, setErr]               = useState<string | null>(null);
+  const [evOpen, setEvOpen]         = useState(true);
+  const [msgs, setMsgs]             = useState<{ r: "u" | "a"; t: string }[]>([]);
+  const [chat, setChat]             = useState("");
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list");
+  const [winW, setWinW]             = useState(typeof window !== "undefined" ? window.innerWidth : 1440);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const onResize = () => setWinW(window.innerWidth);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    const fn = () => setWinW(window.innerWidth);
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
   }, []);
 
   useEffect(() => {
@@ -181,128 +206,140 @@ export default function App() {
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior:"smooth" }); }, [msgs]);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
 
   const isMobile = winW < 768;
   const isTablet = winW >= 768 && winW < 1100;
   const showNav  = !isMobile && !isTablet;
 
-  const critN = traces.filter(t => t.severity==="CRITICAL").length;
-  const avgC  = traces.length ? Math.round(traces.reduce((s,t) => s+t.confidenceScore*100, 0)/traces.length) : 0;
+  const critN = traces.filter(t => t.severity === "CRITICAL").length;
+  const avgC  = traces.length ? Math.round(traces.reduce((s, t) => s + t.confidenceScore * 100, 0) / traces.length) : 0;
 
   const sendChat = () => {
     if (!chat.trim() || !sel) return;
     const q = chat.trim(); setChat("");
-    setMsgs(p => [...p, { r:"u", t:q }]);
+    setMsgs(p => [...p, { r: "u", t: q }]);
     setTimeout(() => setMsgs(p => [...p, {
-      r:"a",
-      t:`Analyzing "${q}" for "${sel.name}"... ${sel.whyActions}`,
+      r: "a",
+      t: `Analyzing "${q}" for "${sel.name}"... ${sel.whyActions}`,
     }]), 700);
   };
 
   return (
     <div style={{
-      fontFamily:"'Inter',-apple-system,BlinkMacSystemFont,sans-serif",
-      height:"100vh", width:"100vw",           // ← full width
-      display:"flex", flexDirection:"column",
-      background:C.bg, overflow:"hidden",
-      boxSizing:"border-box",
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+      height: "100vh", width: "100vw",
+      display: "flex", flexDirection: "column",
+      background: T.bg, overflow: "hidden", boxSizing: "border-box",
     }}>
 
       {/* ── Full-width header ── */}
       <div style={{
-        width:"100%", height:52, background:C.white,
-        borderBottom:`1px solid ${C.gray200}`,
-        display:"flex", alignItems:"center", justifyContent:"space-between",
-        padding:"0 20px", flexShrink:0, zIndex:100,
-        boxSizing:"border-box",
+        width: "100%", height: 52, flexShrink: 0,
+        background: T.white, borderBottom: `1px solid ${T.gray200}`,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 20px", zIndex: 100, boxSizing: "border-box",
       }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:28, height:28, background:C.dark, borderRadius:6, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-            <span style={{ color:C.white, fontSize:14 }}>⬡</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 28, height: 28, background: T.dark, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span style={{ color: T.white, fontSize: 14 }}>⬡</span>
           </div>
-          <span style={{ fontSize:14, fontWeight:700, color:C.dark }}>Trace Intel</span>
-          {!isMobile && <span style={{ fontSize:11, color:C.gray400 }}>Making AI behavior readable</span>}
+          <span style={{ fontSize: 14, fontWeight: 700, color: T.dark }}>Trace Intel</span>
+          {!isMobile && <span style={{ fontSize: 11, color: T.gray400 }}>Making AI behavior readable</span>}
         </div>
-        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <div style={{ width:28, height:28, borderRadius:14, background:C.blueBg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-            <span style={{ fontSize:11, fontWeight:700, color:C.blue }}>J</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 14, background: T.blueBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: T.blue }}>J</span>
           </div>
-          {!isMobile && <span style={{ fontSize:11, color:C.gray500 }}>Jason · AI Investigator</span>}
+          {!isMobile && <span style={{ fontSize: 11, color: T.gray500 }}>Jason · AI Investigator</span>}
         </div>
       </div>
 
-      {/* ── Body row ── */}
-      <div style={{ flex:1, display:"flex", overflow:"hidden", width:"100%" }}>
+      {/* ── Body ── */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden", width: "100%" }}>
 
-        {/* Left nav — 52px */}
+        {/* Left nav */}
         {showNav && (
-          <div style={{ width:52, flexShrink:0, background:C.white, borderRight:`1px solid ${C.gray200}`, display:"flex", flexDirection:"column", alignItems:"center", paddingTop:12, overflowY:"auto" }}>
+          <div style={{ width: 52, flexShrink: 0, background: T.white, borderRight: `1px solid ${T.gray200}`, display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 12, overflowY: "auto" }}>
             {NAV_ITEMS.map(item => (
-              <div key={item.label} style={{ width:42, height:52, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", borderRadius:8, marginBottom:2, background:item.active ? C.blueBg : "transparent", cursor:"pointer" }}>
-                <span style={{ fontSize:15, lineHeight:1, marginBottom:3 }}>{item.icon}</span>
-                <span style={{ fontSize:8, fontWeight:item.active?700:400, color:item.active?C.blue:C.gray500 }}>{item.label}</span>
+              <div key={item.label} style={{ width: 42, height: 52, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", borderRadius: 8, marginBottom: 2, background: item.active ? T.blueBg : "transparent", cursor: "pointer" }}>
+                <span style={{ fontSize: 15, lineHeight: 1, marginBottom: 3 }}>{item.icon}</span>
+                <span style={{ fontSize: 8, fontWeight: item.active ? 700 : 400, color: item.active ? T.blue : T.gray500 }}>{item.label}</span>
               </div>
             ))}
           </div>
         )}
 
-        {/* Sidebar — 280px */}
-        {(!isMobile || mobileView==="list") && (
-          <div style={{ width:isMobile?"100%":280, flexShrink:0, background:C.white, borderRight:`1px solid ${C.gray200}`, display:"flex", flexDirection:"column", overflowY:"auto" }}>
+        {/* ── Sidebar — 280px ── */}
+        {(!isMobile || mobileView === "list") && (
+          <div style={{ width: isMobile ? "100%" : 280, flexShrink: 0, background: T.white, borderRight: `1px solid ${T.gray200}`, display: "flex", flexDirection: "column", overflowY: "auto" }}>
 
-            {/* Summary strip */}
-            <div style={{ background:C.gray50, borderBottom:`1px solid ${C.gray200}`, padding:"14px 16px", flexShrink:0 }}>
-              <div style={{ display:"flex", alignItems:"baseline", gap:6, marginBottom:4 }}>
-                <span style={{ fontSize:28, fontWeight:700, color:C.dark, lineHeight:1 }}>{traces.length}</span>
-                <span style={{ fontSize:11, color:C.gray500 }}>failures today</span>
+            {/* Summary strip — number and text on same line */}
+            <div style={{ background: T.gray50, borderBottom: `1px solid ${T.gray200}`, padding: "14px 16px", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 28, fontWeight: 700, color: T.dark, lineHeight: 1 }}>{traces.length}</span>
+                <span style={{ fontSize: 13, color: T.gray500, lineHeight: 1 }}>failures today</span>
               </div>
-              <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                <div style={{ width:6, height:6, borderRadius:"50%", background:C.red, flexShrink:0 }} />
-                <span style={{ fontSize:10, fontWeight:600, color:C.red }}>{critN} critical · avg {avgC}% ↓</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: T.critText, flexShrink: 0 }} />
+                <span style={{ fontSize: 10, fontWeight: 600, color: T.critText }}>{critN} critical · avg {avgC}% ↓</span>
               </div>
             </div>
 
             {/* Section title — left aligned */}
-            <div style={{ padding:"10px 16px 4px" }}>
-              <span style={{ fontSize:10, fontWeight:700, color:C.gray500, textTransform:"uppercase" as const, letterSpacing:"0.05em" }}>
+            <div style={{ padding: "10px 16px 4px" }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: T.gray500, textTransform: "uppercase" as const, letterSpacing: "0.05em", display: "block", textAlign: "left" as const }}>
                 Failed Evaluations
               </span>
             </div>
 
-            {loading && <p style={{ padding:"12px 16px", fontSize:12, color:C.gray500 }}>Loading...</p>}
-            {err     && <p style={{ padding:"12px 16px", fontSize:12, color:C.red   }}>Error: {err}</p>}
+            {loading && <p style={{ padding: "12px 16px", fontSize: 12, color: T.gray500 }}>Loading...</p>}
+            {err     && <p style={{ padding: "12px 16px", fontSize: 12, color: T.critText }}>Error: {err}</p>}
 
-            {/* Rows — no left accent, clean bottom border only */}
+            {/* Trace rows */}
             {traces.map(tr => {
-              const isSel = sel?.id === tr.id;
+              const isSel  = sel?.id === tr.id;
+              const sevCfg = SEV[tr.severity] || SEV.MEDIUM;
+              const pct    = Math.round(tr.confidenceScore * 100);
+              const confTxt = tr.confidenceScore >= 0.7 ? `High conf. · ${pct}%` : `Low conf. · ${pct}%`;
+
               return (
                 <div key={tr.id}
                   onClick={() => { setSel(tr); setEvOpen(true); setMsgs([]); setMobileView("detail"); }}
-                  style={{ padding:"10px 16px", background:isSel ? C.blueBg : C.white, cursor:"pointer", borderBottom:`1px solid ${C.gray100}` }}>
+                  style={{
+                    padding: "10px 16px",
+                    // selected bg = lighter version of severity color
+                    background: isSel ? sevCfg.sel_bg : T.white,
+                    cursor: "pointer",
+                    borderBottom: `1px solid ${T.gray100}`,
+                  }}>
 
-                  {/* Row 1: name + status badge */}
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
-                    <span style={{ fontSize:11, fontWeight:700, color:C.dark, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" as const, maxWidth:186 }}>
+                  {/* Line 1: trace name (bold, keep existing style) + severity badge */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, marginBottom: 5 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: T.dark, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const, flex: 1 }}>
                       {tr.name}
                     </span>
-                    <StatusBadge label={tr.traceStatus} />
-                  </div>
-
-                  {/* Row 2: severity + confidence text */}
-                  <div style={{ display:"flex", gap:6, alignItems:"center", marginBottom:4, flexWrap:"wrap" as const }}>
                     <SevBadge sev={tr.severity} />
-                    <ConfLabel label="Low conf." />
                   </div>
 
-                  {/* Row 3: product tag — left aligned */}
-                  <div style={{ marginBottom:4, textAlign:"left" as const }}>
+                  {/* Line 2: product tag + confidence text (no bg/border) */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
                     <ProductTag product={tr.product} />
+                    <span style={{ fontSize: 10, color: T.gray500, whiteSpace: "nowrap" as const }}>
+                      {confTxt}
+                    </span>
                   </div>
 
-                  {/* Row 4: failure type — left aligned */}
-                  <span style={{ fontSize:10, color:C.gray500, display:"block", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" as const, textAlign:"left" as const }}>
-                    {tr.failureType}
+                  {/* Line 3: failure type — bigger, left aligned */}
+                  <div style={{ marginBottom: 5 }}>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: T.gray700, display: "block", textAlign: "left" as const }}>
+                      {tr.failureType}
+                    </span>
+                  </div>
+
+                  {/* Line 4: status — plain ALL CAPS text, no badge */}
+                  <span style={{ fontSize: 9, fontWeight: 600, color: T.gray400, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+                    {tr.traceStatus}
                   </span>
                 </div>
               );
@@ -310,95 +347,92 @@ export default function App() {
           </div>
         )}
 
-        {/* ── Detail area — flex:1, full remaining width ── */}
-        {(!isMobile || mobileView==="detail") && sel && (
-          <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0, overflow:"hidden" }}>
+        {/* ── Detail area ── */}
+        {(!isMobile || mobileView === "detail") && sel && (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
 
             {/* Title bar */}
-            <div style={{ background:C.white, borderBottom:`1px solid ${C.gray200}`, padding:"12px 24px", flexShrink:0 }}>
-              {/* Breadcrumb */}
-              <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
-                {/* Same product tag as sidebar */}
+            <div style={{ background: T.white, borderBottom: `1px solid ${T.gray200}`, padding: "12px 24px", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
                 <ProductTag product={sel.product} />
-                <span style={{ fontSize:10, color:C.gray500 }}>→  {sel.name}</span>
+                <span style={{ fontSize: 10, color: T.gray500 }}>→  {sel.name}</span>
               </div>
-              {/* Title row */}
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap" as const }}>
-                <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" as const }}>
-                  <span style={{ fontSize:20, fontWeight:700, color:C.dark }}>{sel.failureType}</span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" as const }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" as const }}>
+                  <span style={{ fontSize: 20, fontWeight: 700, color: T.dark }}>{sel.failureType}</span>
                   <SevBadge sev={sel.severity} />
-                  <ConfLabel label={`Low · ${(sel.confidenceScore*100).toFixed(0)}%`} />
-                  <StatusBadge label={sel.traceStatus} />
+                  <span style={{ fontSize: 11, color: T.gray500 }}>
+                    {sel.confidenceScore >= 0.7 ? "High" : "Low"} conf. · {Math.round(sel.confidenceScore * 100)}%
+                  </span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: T.gray400, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+                    {sel.traceStatus}
+                  </span>
                 </div>
-                <div style={{ display:"flex", gap:8, flexShrink:0 }}>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                   {isMobile && (
-                    <button onClick={() => setMobileView("list")} style={{ padding:"7px 12px", background:C.gray100, border:`1px solid ${C.gray200}`, borderRadius:8, fontSize:11, cursor:"pointer", color:C.gray700 }}>← Back</button>
+                    <button onClick={() => setMobileView("list")} style={{ padding: "7px 12px", background: T.gray100, border: `1px solid ${T.gray200}`, borderRadius: 8, fontSize: 11, cursor: "pointer", color: T.gray700 }}>← Back</button>
                   )}
-                  <button style={{ padding:"8px 18px", background:C.blue, border:"none", borderRadius:8, fontSize:11, fontWeight:700, color:C.white, cursor:"pointer" }}>
+                  <button style={{ padding: "8px 18px", background: T.blue, border: "none", borderRadius: 8, fontSize: 11, fontWeight: 700, color: T.white, cursor: "pointer" }}>
                     ↺ Rerun Evaluation
                   </button>
-                  <button style={{ padding:"8px 14px", background:C.white, border:`1px solid ${C.gray200}`, borderRadius:8, fontSize:11, color:C.gray700, cursor:"pointer" }}>
+                  <button style={{ padding: "8px 14px", background: T.white, border: `1px solid ${T.gray200}`, borderRadius: 8, fontSize: 11, color: T.gray700, cursor: "pointer" }}>
                     ⚠ Quarantine
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Main + Right row */}
-            <div style={{ flex:1, display:"flex", overflow:"hidden" }}>
+            {/* Main + Right */}
+            <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
-              {/* ── Main panel — white bg, flex:1, full width ── */}
-              <div style={{ flex:1, overflowY:"auto", padding:"20px 24px", minWidth:0, background:C.white }}>
-                <p style={{ fontSize:10, color:C.gray500, margin:"0 0 20px", textAlign:"left" as const }}>
-                  Investigated by Jason · {new Date(sel.timestamp).toLocaleString()} · Trace ID: {sel.id.slice(0,16)}...
+              {/* ── Main panel — white, flex:1 ── */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px", minWidth: 0, background: T.white }}>
+                <p style={{ fontSize: 10, color: T.gray500, margin: "0 0 20px" }}>
+                  Investigated by Jason · {new Date(sel.timestamp).toLocaleString()} · Trace ID: {sel.id.slice(0, 16)}...
                 </p>
 
                 {/* Timeline */}
-                <div style={{ border:`1px solid ${C.gray200}`, borderRadius:12, padding:"16px 20px", marginBottom:16 }}>
-                  <p style={{ fontSize:10, fontWeight:700, color:C.gray700, textTransform:"uppercase" as const, letterSpacing:"0.06em", margin:"0 0 16px", textAlign:"left" as const }}>
+                <div style={{ border: `1px solid ${T.gray200}`, borderRadius: 12, padding: "16px 20px", marginBottom: 16 }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: T.gray700, textTransform: "uppercase" as const, letterSpacing: "0.06em", margin: "0 0 16px" }}>
                     Trace Timeline
                   </p>
-                  {sel.spans.map((sp,i) => (
-                    <div key={i} style={{ display:"flex", alignItems:"center", gap:12, marginBottom:10 }}>
-                      <div style={{ width:8, height:8, borderRadius:"50%", flexShrink:0, background:sp.status==="error"?C.red:sp.status==="warning"?"#d97706":"#16a34a" }} />
-                      {/* span name — left aligned */}
-                      <span style={{ fontSize:11, flex:1, fontWeight:sp.status==="error"?700:400, color:sp.status==="error"?C.dark:C.gray500, textAlign:"left" as const }}>
-                        {sp.name}
-                      </span>
-                      <span style={{ fontSize:9, color:C.gray500, background:C.gray100, padding:"2px 6px", borderRadius:4, flexShrink:0 }}>{sp.latency}ms</span>
-                      <span style={{ fontSize:9, fontWeight:700, minWidth:52, textAlign:"right" as const, color:sp.status==="error"?C.red:sp.status==="warning"?"#d97706":"#16a34a" }}>
-                        {sp.status==="error"?"FAILED":sp.status==="warning"?"WARNING":"OK"}
+                  {sel.spans.map((sp, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: sp.status === "error" ? T.critText : sp.status === "warning" ? "#d97706" : T.green }} />
+                      <span style={{ fontSize: 11, flex: 1, fontWeight: sp.status === "error" ? 700 : 400, color: sp.status === "error" ? T.dark : T.gray500 }}>{sp.name}</span>
+                      <span style={{ fontSize: 9, color: T.gray500, background: T.gray100, padding: "2px 6px", borderRadius: 4, flexShrink: 0 }}>{sp.latency}ms</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, minWidth: 52, textAlign: "right" as const, color: sp.status === "error" ? T.critText : sp.status === "warning" ? "#d97706" : T.green }}>
+                        {sp.status === "error" ? "FAILED" : sp.status === "warning" ? "WARNING" : "OK"}
                       </span>
                     </div>
                   ))}
                 </div>
 
                 {/* Root cause */}
-                <div style={{ background:C.redBg, border:`1px solid ${C.redBorder}`, borderLeft:`4px solid ${C.red}`, borderRadius:12, padding:"16px 20px", marginBottom:16 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-                    <span style={{ fontSize:11, color:C.red }}>⚠</span>
-                    <span style={{ fontSize:9, fontWeight:700, color:C.gray500, textTransform:"uppercase" as const, letterSpacing:"0.06em" }}>Root Cause Detected</span>
+                <div style={{ background: T.critBg, border: `1px solid ${T.critBorder}`, borderLeft: `4px solid ${T.critText}`, borderRadius: 12, padding: "16px 20px", marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 11, color: T.critText }}>⚠</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: T.gray500, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Root Cause Detected</span>
                   </div>
-                  {/* failureType — left aligned */}
-                  <p style={{ fontSize:15, fontWeight:700, color:C.dark, margin:"0 0 10px", textAlign:"left" as const }}>{sel.failureType}</p>
-                  <p style={{ fontSize:12, color:C.gray700, lineHeight:1.7, margin:0, textAlign:"left" as const }}>{sel.explanation}</p>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: T.dark, margin: "0 0 10px" }}>{sel.failureType}</p>
+                  <p style={{ fontSize: 12, color: T.gray700, lineHeight: 1.7, margin: 0 }}>{sel.explanation}</p>
                 </div>
 
                 {/* Evidence */}
-                <div style={{ border:`1px solid ${C.gray200}`, borderRadius:12, overflow:"hidden" }}>
-                  <button onClick={() => setEvOpen(!evOpen)} style={{ width:"100%", display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 16px", background:C.gray50, border:"none", borderBottom:evOpen?`1px solid ${C.gray200}`:"none", cursor:"pointer" }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-                      <span style={{ fontSize:10, fontWeight:700, color:C.gray700, textTransform:"uppercase" as const, letterSpacing:"0.06em" }}>Evidence</span>
-                      <span style={{ fontSize:9, fontWeight:700, background:C.gray200, color:C.gray500, borderRadius:10, padding:"1px 6px" }}>{sel.evidence.length}</span>
+                <div style={{ border: `1px solid ${T.gray200}`, borderRadius: 12, overflow: "hidden" }}>
+                  <button onClick={() => setEvOpen(!evOpen)} style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", background: T.gray50, border: "none", borderBottom: evOpen ? `1px solid ${T.gray200}` : "none", cursor: "pointer" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: T.gray700, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Evidence</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, background: T.gray200, color: T.gray500, borderRadius: 10, padding: "1px 6px" }}>{sel.evidence.length}</span>
                     </div>
-                    <span style={{ fontSize:9, color:C.gray500 }}>{evOpen?"▲ Hide":"▼ Show"}</span>
+                    <span style={{ fontSize: 9, color: T.gray500 }}>{evOpen ? "▲ Hide" : "▼ Show"}</span>
                   </button>
                   {evOpen && (
-                    <div style={{ padding:"12px 16px", background:C.white }}>
-                      {sel.evidence.map((item,i) => (
-                        <div key={i} style={{ display:"flex", gap:10, alignItems:"flex-start", marginBottom:8 }}>
-                          <div style={{ width:4, height:4, borderRadius:"50%", background:C.gray400, marginTop:6, flexShrink:0 }} />
-                          <span style={{ fontSize:11, color:C.gray700, lineHeight:1.5, textAlign:"left" as const }}>{item}</span>
+                    <div style={{ padding: "12px 16px", background: T.white }}>
+                      {sel.evidence.map((item, i) => (
+                        <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 8 }}>
+                          <div style={{ width: 4, height: 4, borderRadius: "50%", background: T.gray400, marginTop: 6, flexShrink: 0 }} />
+                          <span style={{ fontSize: 11, color: T.gray700, lineHeight: 1.5 }}>{item}</span>
                         </div>
                       ))}
                     </div>
@@ -408,62 +442,65 @@ export default function App() {
 
               {/* ── Right panel — 280px ── */}
               {!isMobile && !isTablet && (
-                <div style={{ width:280, flexShrink:0, background:C.gray50, borderLeft:`1px solid ${C.gray200}`, overflowY:"auto", padding:"16px 14px", display:"flex", flexDirection:"column", gap:0 }}>
+                <div style={{ width: 280, flexShrink: 0, background: T.gray50, borderLeft: `1px solid ${T.gray200}`, overflowY: "auto", padding: "16px 14px" }}>
 
-                  {/* Suggested actions — left aligned, plain buttons no color */}
-                  <p style={{ fontSize:10, fontWeight:700, color:C.gray500, textTransform:"uppercase" as const, letterSpacing:"0.06em", margin:"0 0 10px", textAlign:"left" as const }}>Suggested Actions</p>
-                  <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:16 }}>
-                    {sel.suggestedActions.map((a,i) => (
+                  {/* Suggested actions */}
+                  <p style={{ fontSize: 10, fontWeight: 700, color: T.gray500, textTransform: "uppercase" as const, letterSpacing: "0.06em", margin: "0 0 10px" }}>
+                    Suggested Actions
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+                    {sel.suggestedActions.map((a, i) => (
                       <button key={i}
-                        style={{ width:"100%", padding:"8px 14px", background:i===0?C.dark:C.white, color:i===0?C.white:C.gray700, border:`1px solid ${i===0?C.dark:C.gray200}`, borderRadius:8, fontSize:11, fontWeight:i===0?700:400, cursor:"pointer", textAlign:"left" as const }}>
+                        style={{ width: "100%", padding: i === 0 ? "10px 14px" : "8px 14px", background: i === 0 ? T.dark : T.white, color: i === 0 ? T.white : T.gray700, border: `1px solid ${i === 0 ? T.dark : T.gray200}`, borderRadius: 8, fontSize: 11, fontWeight: i === 0 ? 700 : 400, cursor: "pointer", textAlign: "left" as const }}>
                         {a}
                       </button>
                     ))}
                   </div>
 
-                  <div style={{ height:1, background:C.gray200, marginBottom:14 }} />
+                  <div style={{ height: 1, background: T.gray200, marginBottom: 14 }} />
 
                   {/* Why these actions */}
-                  <div style={{ background:"#fffbeb", border:`1px solid #fde68a`, borderRadius:10, padding:"12px 14px", marginBottom:14 }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
+                  <div style={{ background: "#fffbeb", border: `1px solid #fde68a`, borderRadius: 10, padding: "12px 14px", marginBottom: 14 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
                       <span>💡</span>
-                      <span style={{ fontSize:11, fontWeight:700, color:C.dark }}>Why these actions?</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: T.dark }}>Why these actions?</span>
                     </div>
-                    {/* paragraph — left aligned */}
-                    <p style={{ fontSize:10, color:C.gray700, lineHeight:1.6, margin:0, textAlign:"left" as const }}>{sel.whyActions}</p>
+                    <p style={{ fontSize: 10, color: T.gray700, lineHeight: 1.6, margin: 0, textAlign: "left" as const }}>{sel.whyActions}</p>
                   </div>
 
-                  <div style={{ height:1, background:C.gray200, marginBottom:14 }} />
+                  <div style={{ height: 1, background: T.gray200, marginBottom: 14 }} />
 
-                  {/* Estimated impact — left aligned, divider above */}
-                  <p style={{ fontSize:10, fontWeight:700, color:C.gray500, textTransform:"uppercase" as const, letterSpacing:"0.06em", margin:"0 0 10px", textAlign:"left" as const }}>Estimated Impact</p>
+                  {/* Estimated impact */}
+                  <p style={{ fontSize: 10, fontWeight: 700, color: T.gray500, textTransform: "uppercase" as const, letterSpacing: "0.06em", margin: "0 0 10px" }}>
+                    Estimated Impact
+                  </p>
                   {[
-                    { l:"Resolution time", v:sel.impact.time,  g:false },
-                    { l:"Affected calls",  v:sel.impact.calls, g:false },
-                    { l:"Confidence boost",v:sel.impact.boost, g:true  },
+                    { l: "Resolution time", v: sel.impact.time,  g: false },
+                    { l: "Affected calls",  v: sel.impact.calls, g: false },
+                    { l: "Confidence boost",v: sel.impact.boost, g: true  },
                   ].map(item => (
-                    <div key={item.l} style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
-                      <span style={{ fontSize:11, color:C.gray500 }}>{item.l}</span>
-                      <span style={{ fontSize:11, fontWeight:700, color:item.g?C.green:C.dark }}>{item.v}</span>
+                    <div key={item.l} style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                      <span style={{ fontSize: 11, color: T.gray500 }}>{item.l}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: item.g ? T.green : T.dark }}>{item.v}</span>
                     </div>
                   ))}
 
-                  <div style={{ height:1, background:C.gray200, margin:"6px 0 14px" }} />
+                  <div style={{ height: 1, background: T.gray200, margin: "6px 0 14px" }} />
 
-                  {/* Ask about this failure — chat inside */}
-                  <div style={{ background:C.blueBg, border:`1px solid ${C.blue}`, borderRadius:10, overflow:"hidden" }}>
-                    <div style={{ padding:"12px 14px 10px" }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <span style={{ fontSize:14, color:C.blue }}>◎</span>
-                        <span style={{ fontSize:12, fontWeight:700, color:C.dark }}>Ask about this failure</span>
+                  {/* Ask about this failure */}
+                  <div style={{ background: T.blueBg, border: `1px solid ${T.blue}`, borderRadius: 10, overflow: "hidden" }}>
+                    <div style={{ padding: "12px 14px 10px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 14, color: T.blue }}>◎</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: T.dark }}>Ask about this failure</span>
                       </div>
                     </div>
 
                     {msgs.length > 0 && (
-                      <div style={{ maxHeight:160, overflowY:"auto", padding:"8px 12px", background:C.white, display:"flex", flexDirection:"column", gap:8 }}>
-                        {msgs.map((m,i) => (
-                          <div key={i} style={{ display:"flex", justifyContent:m.r==="u"?"flex-end":"flex-start" }}>
-                            <div style={{ maxWidth:"88%", padding:"7px 10px", borderRadius:m.r==="u"?"10px 10px 2px 10px":"10px 10px 10px 2px", background:m.r==="u"?C.blue:C.gray100, color:m.r==="u"?C.white:C.gray700, fontSize:11, lineHeight:1.5 }}>
+                      <div style={{ maxHeight: 160, overflowY: "auto", padding: "8px 12px", background: T.white, display: "flex", flexDirection: "column", gap: 8 }}>
+                        {msgs.map((m, i) => (
+                          <div key={i} style={{ display: "flex", justifyContent: m.r === "u" ? "flex-end" : "flex-start" }}>
+                            <div style={{ maxWidth: "88%", padding: "7px 10px", borderRadius: m.r === "u" ? "10px 10px 2px 10px" : "10px 10px 10px 2px", background: m.r === "u" ? T.blue : T.gray100, color: m.r === "u" ? T.white : T.gray700, fontSize: 11, lineHeight: 1.5 }}>
                               {m.t}
                             </div>
                           </div>
@@ -472,16 +509,16 @@ export default function App() {
                       </div>
                     )}
 
-                    <div style={{ padding:"8px 10px", background:msgs.length>0?C.white:"transparent", borderTop:msgs.length>0?`1px solid ${C.gray200}`:"none" }}>
-                      <div style={{ background:C.white, border:`1px solid ${C.gray200}`, borderRadius:20, display:"flex", alignItems:"center", padding:"3px 3px 3px 12px" }}>
+                    <div style={{ padding: "8px 10px", background: msgs.length > 0 ? T.white : "transparent", borderTop: msgs.length > 0 ? `1px solid ${T.gray200}` : "none" }}>
+                      <div style={{ background: T.white, border: `1px solid ${T.gray200}`, borderRadius: 20, display: "flex", alignItems: "center", padding: "3px 3px 3px 12px" }}>
                         <input
                           value={chat}
                           onChange={e => setChat(e.target.value)}
-                          onKeyDown={e => e.key==="Enter" && sendChat()}
+                          onKeyDown={e => e.key === "Enter" && sendChat()}
                           placeholder="Why is intent detection failing?"
-                          style={{ flex:1, border:"none", outline:"none", fontSize:11, color:C.dark, background:"transparent", minWidth:0 }}
+                          style={{ flex: 1, border: "none", outline: "none", fontSize: 11, color: T.dark, background: "transparent", minWidth: 0 }}
                         />
-                        <button onClick={sendChat} style={{ width:28, height:28, borderRadius:14, background:C.blue, border:"none", color:C.white, fontSize:13, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>↑</button>
+                        <button onClick={sendChat} style={{ width: 28, height: 28, borderRadius: 14, background: T.blue, border: "none", color: T.white, fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>↑</button>
                       </div>
                     </div>
                   </div>
