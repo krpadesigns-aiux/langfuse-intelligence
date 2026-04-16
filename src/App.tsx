@@ -147,6 +147,7 @@ export default function App() {
   const [chat, setChat]             = useState("");
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [winW, setWinW]             = useState(typeof window !== "undefined" ? window.innerWidth : 1440);
+  const [feedback, setFeedback]     = useState<Record<string, number>>({});
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -179,6 +180,20 @@ export default function App() {
       r: "a",
       t: `Analyzing "${q}" for "${sel.name}"... ${sel.whyActions}`,
     }]), 700);
+  };
+
+  const submitFeedback = async (traceId: string, value: number) => {
+    setFeedback(prev => ({ ...prev, [traceId]: value }));
+    try {
+      const creds = btoa("pk-lf-d05e60cb-f349-4d23-93b3-649bb0b9468e:sk-lf-7d64433c-6df0-4b56-b95e-2dd654b32c15");
+      await fetch("https://us.cloud.langfuse.com/api/public/scores", {
+        method: "POST",
+        headers: { "Authorization": "Basic " + creds, "Content-Type": "application/json" },
+        body: JSON.stringify({ traceId, name: "human_feedback", value, comment: "root_cause_accuracy" }),
+      });
+    } catch (e) {
+      console.error("Feedback error:", e);
+    }
   };
 
   const sevCfg = sel ? (SEV[sel.severity] || SEV.MEDIUM) : SEV.CRITICAL;
@@ -349,9 +364,25 @@ export default function App() {
 
                 {/* Root cause — color matches severity */}
                 <div style={{ background: sevCfg.rc_bg, border: `1px solid ${sevCfg.rc_bd}`, borderLeft: `4px solid ${sevCfg.rc_left}`, borderRadius: 12, padding: "16px 20px", marginBottom: 16 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                    <span style={{ fontSize: 11, color: sevCfg.rc_left }}>⚠</span>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: T.gray500, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Root Cause Detected</span>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 11, color: sevCfg.rc_left }}>⚠</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: T.gray500, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Root Cause Detected</span>
+                    </div>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <button
+                        onClick={() => submitFeedback(sel.id, 1)}
+                        title="Correct diagnosis"
+                        style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${T.gray200}`, background: feedback[sel.id] === 1 ? "#f0fdf4" : T.white, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+                        👍
+                      </button>
+                      <button
+                        onClick={() => submitFeedback(sel.id, -1)}
+                        title="Incorrect diagnosis"
+                        style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${T.gray200}`, background: feedback[sel.id] === -1 ? "#fef2f2" : T.white, cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+                        👎
+                      </button>
+                    </div>
                   </div>
                   <p style={{ fontSize: 15, fontWeight: 700, color: T.dark, margin: "0 0 10px", textAlign: "left" as const }}>{sel.failureType}</p>
                   <p style={{ fontSize: 12, color: T.gray700, lineHeight: 1.7, margin: 0, textAlign: "left" as const }}>{sel.explanation}</p>
