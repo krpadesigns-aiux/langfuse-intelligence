@@ -251,7 +251,7 @@ export default function App() {
               const sc    = SEV[tr.severity] || SEV.MEDIUM;
               const pct   = Math.round(tr.confidenceScore * 100);
               const isLow = tr.confidenceScore < 0.7;
-              const confTxt   = isLow ? `Low conf. · ${pct}%` : `High conf. · ${pct}%`;
+              const confTxt   = isLow ? `Low confidence · ${pct}%` : `High confidence · ${pct}%`;
               const confColor = isLow ? T.lowConfColor : T.highConfColor;
 
               return (
@@ -266,14 +266,14 @@ export default function App() {
                     </span>
                     <SevBadge sev={tr.severity} />
                   </div>
-                  {/* Line 2: confidence */}
-                  <span style={{ fontSize: 10, color: confColor, fontWeight: 500, lineHeight: "1.2", display: "block", marginBottom: 1 }}>
-                    {confTxt}
-                  </span>
-                  {/* Line 3: failure type */}
+                  {/* Line 2: failure type — moved above confidence */}
                   <p style={{ fontSize: 11, fontWeight: 500, color: T.gray700, margin: "0 0 1px", lineHeight: "1.3" }}>
                     {tr.failureType}
                   </p>
+                  {/* Line 3: confidence — now below failure type */}
+                  <span style={{ fontSize: 10, color: confColor, fontWeight: 500, lineHeight: "1.2", display: "block", marginBottom: 1 }}>
+                    {confTxt}
+                  </span>
                   {/* Line 4: status */}
                   <span style={{ fontSize: 9, fontWeight: 600, color: T.gray400, textTransform: "uppercase" as const, letterSpacing: "0.05em", lineHeight: "1.2", display: "block" }}>
                     {tr.traceStatus}
@@ -299,7 +299,7 @@ export default function App() {
                   <span style={{ fontSize: 20, fontWeight: 700, color: T.dark }}>{sel.failureType}</span>
                   <SevBadge sev={sel.severity} />
                   <span style={{ fontSize: 11, color: sel.confidenceScore < 0.7 ? T.lowConfColor : T.highConfColor, fontWeight: 500 }}>
-                    {sel.confidenceScore >= 0.7 ? "High" : "Low"} conf. · {Math.round(sel.confidenceScore * 100)}%
+                    {sel.confidenceScore >= 0.7 ? "High confidence" : "Low confidence"} · {Math.round(sel.confidenceScore * 100)}%
                   </span>
                   <span style={{ fontSize: 10, fontWeight: 600, color: T.gray400, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
                     {sel.traceStatus}
