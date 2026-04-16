@@ -257,10 +257,10 @@ export default function App() {
               return (
                 <div key={tr.id}
                   onClick={() => { setSel(tr); setEvOpen(true); setMsgs([]); setMobileView("detail"); }}
-                  style={{ padding: "10px 16px", background: isSel ? sc.sel_bg : T.white, cursor: "pointer", borderBottom: `1px solid ${T.gray100}`, textAlign: "left" as const }}>
+                  style={{ padding: "7px 16px", background: isSel ? sc.sel_bg : T.white, cursor: "pointer", borderBottom: `1px solid ${T.gray100}`, textAlign: "left" as const }}>
 
                   {/* Line 1: trace name + severity badge */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, marginBottom: 5 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, marginBottom: 3 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: T.dark, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const, flex: 1 }}>
                       {tr.name}
                     </span>
@@ -268,14 +268,14 @@ export default function App() {
                   </div>
 
                   {/* Line 2: confidence text only — no product tag */}
-                  <div style={{ marginBottom: 5 }}>
+                  <div style={{ marginBottom: 3 }}>
                     <span style={{ fontSize: 10, color: confColor, fontWeight: 500 }}>
                       {confTxt}
                     </span>
                   </div>
 
                   {/* Line 3: failure type */}
-                  <p style={{ fontSize: 12, fontWeight: 500, color: T.gray700, margin: "0 0 5px", textAlign: "left" as const }}>
+                  <p style={{ fontSize: 12, fontWeight: 500, color: T.gray700, margin: "0 0 3px", textAlign: "left" as const }}>
                     {tr.failureType}
                   </p>
 
