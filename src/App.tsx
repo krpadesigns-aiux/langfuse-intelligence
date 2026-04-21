@@ -63,8 +63,8 @@ const SCENARIOS: Record<string, Partial<Trace>> = {
 };
 
 async function fetchTraces(): Promise<Trace[]> {
-  const creds = btoa("pk-lf-d05e60cb-f349-4d23-93b3-649bb0b9468e:sk-lf-7d64433c-6df0-4b56-b95e-2dd654b32c15");
-  const res = await fetch("https://us.cloud.langfuse.com/api/public/traces?limit=20", {
+  const creds = btoa(`${import.meta.env.VITE_LANGFUSE_PUBLIC_KEY}:${import.meta.env.VITE_LANGFUSE_SECRET_KEY}`);
+  const res = await fetch(`${import.meta.env.VITE_LANGFUSE_HOST || "https://us.cloud.langfuse.com"}/api/public/traces?limit=20`, {
     headers: { Authorization: "Basic " + creds },
   });
   if (!res.ok) throw new Error("Langfuse " + res.status);
@@ -185,8 +185,8 @@ export default function App() {
   const submitFeedback = async (traceId: string, value: number) => {
     setFeedback(prev => ({ ...prev, [traceId]: value }));
     try {
-      const creds = btoa("pk-lf-d05e60cb-f349-4d23-93b3-649bb0b9468e:sk-lf-7d64433c-6df0-4b56-b95e-2dd654b32c15");
-      await fetch("https://us.cloud.langfuse.com/api/public/scores", {
+      const creds = btoa(`${import.meta.env.VITE_LANGFUSE_PUBLIC_KEY}:${import.meta.env.VITE_LANGFUSE_SECRET_KEY}`);
+      await fetch(`${import.meta.env.VITE_LANGFUSE_HOST || "https://us.cloud.langfuse.com"}/api/public/scores`, {
         method: "POST",
         headers: { "Authorization": "Basic " + creds, "Content-Type": "application/json" },
         body: JSON.stringify({ traceId, name: "human_feedback", value, comment: "root_cause_accuracy" }),
